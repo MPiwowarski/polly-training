@@ -21,17 +21,17 @@ namespace PollyTraining.Controllers
             _githubService = githubService;
         }
 
-        [HttpGet("users/{userName}")]
+        [HttpGet("users/findByUserName/{userName}")]
         public async Task<IActionResult> GetUserByUsername(string userName)
         {
             var user = await _githubService.GetUserByUsernameAsync(userName);
             return user != null ? (IActionResult)Ok(user) : NotFound();
         }
 
-        [HttpGet("users/{orgName}")]
-        public async Task<IActionResult> GetUserFromOrg(string userName)
+        [HttpGet("users/findByOrgName/{orgName}")]
+        public async Task<IActionResult> GetUserFromOrg(string orgName)
         {
-            var users = await _githubService.GetUserFromOrgAsync(userName);
+            var users = await _githubService.GetUserFromOrgAsync(orgName);
             return users != null ? (IActionResult)Ok(users) : NotFound();
         }
     }
