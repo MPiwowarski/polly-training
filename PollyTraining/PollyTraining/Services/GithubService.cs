@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using PollyTraining.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,12 +70,4 @@ namespace PollyTraining.Services
         }
     }
 
-    public class GithubUser
-    {
-        public string Login { get; set; }
-
-        public int Id { get; set; }
-
-        public string AvatarUrl { get; set; }
-    }
 }
