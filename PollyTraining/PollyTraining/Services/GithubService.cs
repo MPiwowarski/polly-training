@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Polly;
+using Polly.Retry;
 using PollyTraining.Contracts;
 using System;
 using System.Collections.Generic;
@@ -12,61 +14,36 @@ namespace PollyTraining.Services
 {
     public class GithubService : IGithubService
     {
-
         private const int _maxRetries = 3;
         private readonly IHttpClientFactory _httpClientFactory;
         private static readonly Random _random = new Random();
+        private readonly AsyncRetryPolicy<GithubUser> _retryPolicy;
 
         public GithubService(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
+            _retryPolicy = Policy<GithubUser>.Handle<HttpRequestException>().RetryAsync(_maxRetries);
         }
 
         public async Task<GithubUser> GetUserByUsernameAsync(string username)
         {
-
             var client = _httpClientFactory.CreateClient("github");
-            var retriesLeft = _maxRetries;
 
-            GithubUser githubUser = null;
-            while (retriesLeft > 0)
+            return await _retryPolicy.ExecuteAsync(async () =>
             {
-                try
+                // added for polly tests
+                if (_random.Next(1, 3) == 1)
+                    throw new HttpRequestException("This is a fake request exception");
+
+                var result = await client.GetAsync($"/users/{username}");
+                if (result.StatusCode == HttpStatusCode.NotFound)
                 {
-                    // added for polly tests
-                    //if (_random.Next(1, 3) == 1)
-                    //    throw new HttpRequestException("This is a fake request exception");
-
-                    var result = await client.GetAsync($"/users/{username}");
-                    if (result.StatusCode == HttpStatusCode.NotFound)
-                    {
-                        break;
-                    }
-
-                    var resultString = await result.Content.ReadAsStringAsync();
-                    githubUser = JObject.Parse(resultString).ToObject<GithubUser>();
-                    break;
-
+                    return null;
                 }
-                catch (HttpRequestException e)
-                {
-                    retriesLeft--;
-                    if (retriesLeft == 0)
-                    {
-                        throw;
-                    }
-                }
-                catch(Exception e)
-                {
-                    retriesLeft--;
-                    if (retriesLeft == 0)
-                    {
-                        throw;
-                    }
-                }
-            }
 
-            return githubUser;
+                var resultString = await result.Content.ReadAsStringAsync();
+                return JObject.Parse(resultString).ToObject<GithubUser>();
+            });
         }
     }
 
