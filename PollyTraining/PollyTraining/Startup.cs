@@ -27,18 +27,23 @@ namespace PollyTraining
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddHttpClient("GitHub", client =>
+            services.AddHttpClient("github", c =>
             {
-                client.BaseAddress = new Uri("https://api.github.com/");
-                client.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
-                client.DefaultRequestHeaders.Add("User-Agent", "HttpClientFactoryExample");
+                c.BaseAddress = new Uri("https://api.github.com/");
+                // Github API versioning
+                c.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
+                // Github requires a user-agent
+                c.DefaultRequestHeaders.Add("User-Agent", "HttpClientFactory-Sample");
             });
             services.AddScoped<IGithubService, GithubService>();
+
+            services.AddSwaggerGen();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseSwagger();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -49,6 +54,11 @@ namespace PollyTraining
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
+            });
 
             app.UseEndpoints(endpoints =>
             {

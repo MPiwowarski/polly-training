@@ -24,7 +24,7 @@ namespace PollyTraining.Services
         public async Task<GithubUser> GetUserByUsernameAsync(string username)
         {
 
-            var client = _httpClientFactory.CreateClient("Github");
+            var client = _httpClientFactory.CreateClient("github");
             var retriesLeft = _maxRetries;
 
             GithubUser githubUser = null;
@@ -32,8 +32,9 @@ namespace PollyTraining.Services
             {
                 try
                 {
-                    if (_random.Next(1, 3) == 1)
-                        throw new HttpRequestException("This is a fake request exception");
+                    // added for polly tests
+                    //if (_random.Next(1, 3) == 1)
+                    //    throw new HttpRequestException("This is a fake request exception");
 
                     var result = await client.GetAsync($"/users/{username}");
                     if (result.StatusCode == HttpStatusCode.NotFound)
@@ -47,6 +48,14 @@ namespace PollyTraining.Services
 
                 }
                 catch (HttpRequestException e)
+                {
+                    retriesLeft--;
+                    if (retriesLeft == 0)
+                    {
+                        throw;
+                    }
+                }
+                catch(Exception e)
                 {
                     retriesLeft--;
                     if (retriesLeft == 0)
