@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SBShared.Models
 {
-    public class Person
+    public class PersonModel
     {
         [Required]
         public string FirstName { get; set; }
